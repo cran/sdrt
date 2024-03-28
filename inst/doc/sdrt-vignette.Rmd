@@ -1,0 +1,117 @@
+---
+title: "sdrt-vignette"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{sdrt-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Overview
+
+The **sdrt** R package provides powerful capabilities for estimating a basis for the Time Series Central Mean Subspace (TS-CMS). This `vignette` serves as a comprehensive guide to the functionalities offered by the **sdrt**  package, utilizing the `lynx` dataset as an illustrative example.
+
+## Chapter 1: Installation of **itdr** package
+
+The **itdr** R package can be installed in two ways:  
+
+* From the Comprehensive R Archive Network (CRAN):
+
+The following code chunk demonstrate the installation of the package using the `install.packages()` function in R. Then, the library can be import into the current R session using the  `library()` function. 
+
+```{r eval=FALSE, include=TRUE}
+install.packages("sdrt")
+library(sdrt)
+```
+
+* From GitHub:
+
+The development version of **sdrt** R package can be installed form GitHub.  
+
+```{r eval=FALSE, include=TRUE}
+library(devtools)
+install_github("TharinduPDeAlwis/sdrt")
+library(sdrt)
+```
+
+
+## Chapter 2: Fourier Transformation Method to Estimate the TS-CMS.
+
+In this section, we demonstrate the functions within the **sdrt** package that utilize the Fourier method to estimate the sufficient dimension reduction (SDR) subspaces in time series. 
+
+In Section 2.1 brings the estimation of model parameters. The tuning the hyper parameter in Section 2.2 and the estimation of a basis of the TS-CMS explains in Section 2.3.  
+
+### 2.1: Estimating Model Parameters
+
+The first step is to estimate the model parameters, specifically `p` and `d`. The block bootstrap procedure is employed to estimate the unknown lags number (`p`) and the unknown dimension of the TS-CMS  (`d`). For more details refer to Samadi and De Alwis (2023). The following R code chunk demonstrate the use of the  `pd.boots()` function to estimate `p` and `d`. 
+
+```{r eval=FALSE, include=TRUE}
+data("lynx")
+y <- log10(lynx)
+p_list=seq(2,5,by=1)
+fit.model=pd.boots(y,p_list,w1=0.1,B=10)
+fit.model$dis_pd
+fit.model$p_hat
+fit.model$d_hat
+```
+
+In this example, the estimated lag number and the dimension of the TS-CMS are denoted as `p_hat=3` and `d_hat=1` for the `lynx` dataset. 
+
+### 2.2: Tuning the Model Parameter
+Within the Fourier method for estimating the TS-CMS, there exists a hyperparameter \(\sigma_u^2\). While a recommended value of \(\sigma_u^2=0.1\) exists, the **sdrt** package  offers users the flexibility to fine-tune this parameter for each dataset. The following R code chunk outlines the procedure using the `sigma_u()` function to tune this parameter for the `lynx` dataset. 
+
+```{r eval=FALSE, include=TRUE}
+set.seed(1)
+data("lynx")
+y <- log10(lynx)
+p <- 3
+d <- 1
+w1_list=seq(0.1,0.5,by=0.1)
+Tunning.model=sigma_u(y, p, d, w1_list=w1_list, std=FALSE, B=10)
+Tunning.model$sigma_u_hat
+```
+
+In this example, the estimated tuning parameter for the `lynx` dataset is \(\sigma_u^2=0.3\). Users can adapt this process to optimize the hyperparameter for their specific dataset. 
+
+### 2.3: Estimating the TS-CMS
+
+We have described the estimation procedure of model parameters, `p` and `d` in Section 2.1 and the tuning parameter \(\sigma_u^2\) in Section 2.2. Now, we are ready to estimate the Time Series Central Mean Subspace (TS-CMS). The TS-CMS can be estimated using the `sdrt()` function by passing the `method` argument as `"FM"`. The following R code chunk illustrate the use of the `sdrt()` function for this purpose.   
+
+```{r eval=FALSE, include=TRUE}
+library(sdrt)
+data("lynx")
+y <- log10(lynx)
+p <- 3
+d <- 1
+fit.model <- sdrt(y, p, d=1,method="FM",density = "kernel")
+fit.model$eta_hat
+```
+
+In this example, the estimated TS-CMS is obtained using the Fourier method ("FM"). Users can customize the parameters according to their dataset and analysis needs.
+
+## Chapter 3: Nadaraya-Watson Method to Estimate the TS-CMS.
+
+In this section, we demonstrate the application of the `sdrt()` function within the **sdrt** R package to estimate the TS-CMS using the Nadaraya-Watson (NW) method, as proposed by Park et al. (2009). The following R code chunk illustrates the utilization of the `sdrt()` on the `lynx` dataset. Here, we specify the `method` argument as `"NW"` to indicate the Nadaraya-Watson estimation method. 
+
+
+```{r eval=FALSE, include=TRUE}
+library(pracma)
+data("lynx")
+y <- log10(lynx)
+p <- 4
+d <- 1
+fit.model <- sdrt(y, p, d,method="NW")
+fit.model$eta_hat
+```
+In this example, the Nadaraya-Watson method is employed to estimate the TS-CMS, and users can adjust parameters based on their specific dataset requirements.
+
+
+
+
